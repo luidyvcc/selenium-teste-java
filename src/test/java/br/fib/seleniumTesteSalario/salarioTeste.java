@@ -2,9 +2,13 @@ package br.fib.seleniumTesteSalario;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 import org.junit.After;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -12,6 +16,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 
 import br.fib.seleniumTesteSalario.models.Usuario;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class salarioTeste {
 
 	private Usuario joao;
@@ -26,12 +31,12 @@ public class salarioTeste {
 		this.joao = new Usuario("Joao da Silva", "1", "40", "15.00");
 
 		this.driver = new ChromeDriver();
-		driver.get("http://192.168.5.115:9098");
+		driver.get("http://localhost:9098/");
 
 	}
 
 	@Test
-	public void deveAdicionarUmFuncionario() {
+	public void aDeveAdicionarUmFuncionario() {
 
 		WebElement buttonNovo = driver.findElement(By.cssSelector("div.navbar-menu div.navbar-start a"));
 		buttonNovo.click();
@@ -53,30 +58,46 @@ public class salarioTeste {
 		salaryHour.clear();
 		salaryHour.sendKeys(this.joao.getSalarioHora());
 
-		WebElement botaoSalvar = driver.findElement(By.id("salvar"));
-		botaoSalvar.click();
+		salaryHour.submit();
 
 		boolean achouName = driver.getPageSource().contains(joao.getNome());
-		boolean achouDependents = driver.getPageSource().contains(this.joao.getDependentes());
-		boolean achouTimeToWork = driver.getPageSource().contains(this.joao.getHoraTrabalhada());
-		boolean achouSalaryHour = driver.getPageSource().contains(this.joao.getSalarioHora());
 
 		assertTrue(achouName);
-		assertTrue(achouDependents);
-		assertTrue(achouTimeToWork);
-		assertTrue(achouSalaryHour);
 
 	}
 
 	@Test
-	public void verificaCadastroDoFuncionario() {
+	public void bVerificaCadastroDoFuncionario() {
+
 		boolean achouNome = this.driver.getPageSource().contains(this.joao.getNome());
 
 		assertTrue(achouNome);
 	}
 
 	@Test
-	public void verificaMensagemDeFaltaDePreenchimntoDeCampo() {
+	public void cVerificaCalculoSalarioLiquido() {
+
+		List<WebElement> trs = driver.findElements(By.cssSelector("tbody tr"));
+
+		boolean satarioLiquidoCorreto = false;
+
+		for (WebElement tr : trs) {
+
+			List<WebElement> td = tr.findElements(By.tagName("td"));
+
+			if (td.get(0).getText().equals(this.joao.getNome()) && td.get(4).getText().equals("R$ 562,25")) {
+
+				satarioLiquidoCorreto = true;
+				break;
+
+			}
+		}
+
+		assertTrue(satarioLiquidoCorreto);
+	}
+
+	@Test
+	public void dVerificaMensagemDeFaltaDePreenchimntoDeCampo() {
 
 		WebElement buttonNovo = driver.findElement(By.cssSelector("div.navbar-menu div.navbar-start a"));
 		buttonNovo.click();
@@ -97,12 +118,30 @@ public class salarioTeste {
 		salaryHour.clear();
 		salaryHour.sendKeys(this.joao.getSalarioHora());
 
-		WebElement botaoSalvar = driver.findElement(By.id("salvar"));
-		botaoSalvar.click();
+		salaryHour.submit();
 
 		boolean achouMensagem = driver.getPageSource().contains("não pode estar vazio");
 
 		assertTrue(achouMensagem);
+
+	}
+
+	@Test
+	public void eVerificaExclusaoDoFuncionario() {
+
+		List<WebElement> trs = driver.findElements(By.cssSelector("tbody tr"));
+
+		for (WebElement tr : trs) {
+
+			List<WebElement> td = tr.findElements(By.tagName("td"));
+
+			if (td.get(0).getText().equals(this.joao.getNome())) {
+
+				tr.findElement(By.cssSelector("td:nth-child(7) a")).click();
+				break;
+
+			}
+		}
 
 	}
 
